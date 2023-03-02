@@ -4,8 +4,10 @@
 
 #include "http.h"
 
+/*
+ Just a bunch of appending and null-checking to generate a valid http response from header string and body string (`string_t`)
+*/
 response_t generate_response(enum Status status, const char* header, const string_t* response_body) {
-    // NOTE: accepting and checking NULL head/body is hellish, consider NOT
     response_t result = {NULL, 0};
 
     // protocol + status code
@@ -58,7 +60,9 @@ response_t generate_response(enum Status status, const char* header, const strin
 
     return result;
 }
-
+/*
+Extract path from a http request;
+*/
 string_t get_path_from_request(const char* buffer) {
     int idx[] = {-1, -1};
 
