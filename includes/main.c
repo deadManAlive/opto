@@ -66,7 +66,9 @@ int main() {
         }
 
         printf("Request: \n%s\n", buffer);
-        printf("Response \n%s\n", response.buffer);
+        // printf("Response \n%s\n", response.buffer);
+        string_t path = get_path_from_request(buffer);
+        printf("path: %s | %lu\n", path.buffer, path.length);
         
         // Send the response to the client
         if (write(new_socket, response.buffer, response.length) < 0) {
@@ -75,6 +77,8 @@ int main() {
         }
         
         // Clean up
+        free(path.buffer);
+
         memset(buffer, 0, MAX_REQUEST_SIZE);
         close(new_socket);
     }

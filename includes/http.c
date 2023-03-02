@@ -58,3 +58,38 @@ response_t generate_response(enum Status status, const char* header, const strin
 
     return result;
 }
+
+string_t get_path_from_request(const char* buffer) {
+    int idx[] = {-1, -1};
+
+    for(int i = 0; buffer[i] != '\n'; i++) {
+        if (buffer[i] == ' ') {
+            if(idx[0] == -1) {
+                idx[0] = i;
+            }
+            else {
+                idx[1] = i;
+            }
+        }
+    }
+
+    if (idx[0] == -1 || idx[1] == -1) {
+        return (string_t){NULL, 0};
+    }
+
+    int path_size = idx[1] - idx[0];
+    char* path = malloc(path_size);
+
+    for(int i = idx[0] + 1, j = 0; i < idx[1]; i++, j++) {
+        path[j] = buffer[i];
+    }
+    path[path_size - 1] = '\0';
+
+    string_t result = { NULL, 0 };
+    
+    result.buffer = malloc(strlen(path) + 1);
+    strcpy(result.buffer, path);
+    result.length = strlen(path);
+
+    return result;
+}
