@@ -5,6 +5,7 @@
 #include "http.h"
 
 response_t generate_response(enum Status status, const char* header, const string_t* response_body) {
+    // NOTE: accepting and checking NULL head/body is hellish, consider NOT
     response_t result = {NULL, 0};
 
     // protocol + status code
@@ -28,22 +29,20 @@ response_t generate_response(enum Status status, const char* header, const strin
 
     // append header, if any
     size_t phead_length = strlen(phead);
-    size_t header_length = strlen(header);
+    size_t header_length = (header?strlen(header):0);
     if (header) {
         memcpy(phead + phead_length, header, header_length);
+        memcpy(phead + phead_length + header_length, "\r\n", 2);
     }
 
     //append header-body delimiter (\r\n)
-    phead[phead_length + header_length] = '\r';
-    phead[phead_length + header_length + 1] = '\n';
-    phead[phead_length + header_length + 2] = '\r';
-    phead[phead_length + header_length + 3] = '\n';
+    memcpy(phead + phead_length + header_length + (header?2:0), "\r\n", 2);
+    phead[phead_length + header_length + (header?2:0) + 2] = '\0';
 
-    
-    size_t total_header_length = phead_length + header_length + 4;
+    size_t total_header_length = phead_length + header_length + (header?4:2);
 
     //append to result
-    size_t total_response_length = total_header_length + response_body->length;
+    size_t total_response_length = total_header_length + (response_body?response_body->length:0);
 
     result.buffer = malloc(total_response_length + 1);
     if (!result.buffer) {
@@ -52,7 +51,7 @@ response_t generate_response(enum Status status, const char* header, const strin
     }
 
     memcpy(result.buffer, phead, total_header_length);
-    memcpy(result.buffer + total_header_length, response_body->buffer, response_body->length);
+    if (response_body) { memcpy(result.buffer + total_header_length, response_body->buffer, response_body->length); }
     
     result.buffer[total_response_length] = '\0';
     result.length = total_response_length;

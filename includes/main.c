@@ -66,6 +66,7 @@ int main() {
         }
 
         printf("Request: \n%s\n", buffer);
+        printf("Response \n%s\n", response.buffer);
         
         // Send the response to the client
         if (write(new_socket, response.buffer, response.length) < 0) {

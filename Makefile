@@ -3,9 +3,9 @@ SRC = $(wildcard includes/*.c)
 build: ${SRC}
 	gcc ${SRC} $ -o server
 
-debug: build/server ${SRC}
+debug: ${SRC}
 	${CC} ${SRC} $ -g -o server
-	gdb ./build/server
+	gdb ./server
 
 run:
 	./server
