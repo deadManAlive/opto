@@ -8,6 +8,7 @@
  Just a bunch of appending and null-checking to generate a valid http response from header string and body string (`string_t`)
 */
 response_t generate_response(enum Status status, const char* header, const string_t* response_body) {
+    // NOTE: accepting and checking NULL head/body is hellish, consider NOT
     response_t result = {NULL, 0};
 
     // protocol + status code
@@ -64,6 +65,7 @@ response_t generate_response(enum Status status, const char* header, const strin
 Extract path from a http request;
 */
 string_t get_path_from_request(const char* buffer) {
+    // get space indices, path is in between
     int idx[] = {-1, -1};
 
     for(int i = 0; buffer[i] != '\n'; i++) {
@@ -77,23 +79,23 @@ string_t get_path_from_request(const char* buffer) {
         }
     }
 
+    // return null if no 2 space found
     if (idx[0] == -1 || idx[1] == -1) {
         return (string_t){NULL, 0};
     }
 
-    int path_size = idx[1] - idx[0];
-    char* path = malloc(path_size);
-
-    for(int i = idx[0] + 1, j = 0; i < idx[1]; i++, j++) {
-        path[j] = buffer[i];
-    }
-    path[path_size - 1] = '\0';
-
+    // copy path portion to dedicated string
     string_t result = { NULL, 0 };
     
-    result.buffer = malloc(strlen(path) + 1);
-    strcpy(result.buffer, path);
-    result.length = strlen(path);
+    int path_size = idx[1] - idx[0];
+    result.buffer = malloc(path_size);
+
+    for(int i = idx[0] + 1, j = 0; i < idx[1]; i++, j++) {
+        result.buffer[j] = buffer[i];
+    }
+    result.buffer[path_size - 1] = '\0';
+
+    result.length = path_size - 1;
 
     return result;
 }
