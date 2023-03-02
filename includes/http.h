@@ -3,7 +3,10 @@
 
 #include "fs.h"
 
-typedef string_t response_t;
+typedef struct {
+    char* buffer;
+    size_t length;
+} response_t;
 
 enum Status {
     OK = 200,
@@ -11,6 +14,7 @@ enum Status {
 };
 
 response_t generate_response(enum Status status, const char* header, const string_t* response_body);
+string_t get_path_from_request(const char* buffer);
 
 
 #endif

@@ -12,8 +12,7 @@
 #define PORT 3110
 #define MAX_REQUEST_SIZE 2048
 
-int main()
-{
+int main() {
     int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
@@ -51,7 +50,7 @@ int main()
     printf("Server is running on port %d...\n", PORT);
 
     string_t content = read_file_contents("routes/index.html");
-    string_t response = generate_response(OK, "Content-Type: text/html", &content);
+    response_t response = generate_response(OK, "Content-Type: text/html", &content);
     
     // Accept incoming connections
     while (1) {
@@ -65,6 +64,8 @@ int main()
             perror("read failed");
             exit(EXIT_FAILURE);
         }
+
+        printf("Request: \n%s\n", buffer);
         
         // Send the response to the client
         if (write(new_socket, response.buffer, response.length) < 0) {
