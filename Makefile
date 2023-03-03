@@ -9,3 +9,7 @@ debug: ${SRC}
 
 run:
 	./server
+
+reload: server ${SRC}
+	gcc ${SRC} $ -o server
+	./server

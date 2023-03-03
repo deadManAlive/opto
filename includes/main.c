@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include "fs.h"
 #include "http.h"
@@ -12,7 +13,21 @@
 #define PORT 3110
 #define MAX_REQUEST_SIZE 2048
 
-int main() {
+int main(int argc, char** argv) {
+    // checking work dir/exec dir
+    char exec_path[PATH_MAX];
+    char* exe_dir;
+    ssize_t len = readlink("/proc/self/exe", exec_path, sizeof(exec_path) - 1);
+    if (len != -1) {
+        exec_path[len] = '\0';
+        exe_dir = dirname(exec_path);
+        printf("exec. dir.: [%s]\n", exe_dir);
+    }
+    else {
+        perror("error in reading executable directory");
+    }
+
+    // initiate socket vars.
     int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
@@ -53,6 +68,7 @@ int main() {
     response_t response = generate_response(OK, "Content-Type: text/html", &content);
     
     // Accept incoming connections
+    char response_path[PATH_MAX];
     while (1) {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
             perror("accept failed");
@@ -65,10 +81,19 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        printf("Request: \n%s\n", buffer);
-        // printf("Response \n%s\n", response.buffer);
-        string_t path = get_path_from_request(buffer);
-        printf("path: %s | %lu\n", path.buffer, path.length);
+        string_t request_path = get_path_from_request(buffer);
+        // snprintf(response_path, PATH_MAX, "%s/routes%s", exe_dir, request_path.buffer);
+        if (verify_path(response_path, exe_dir, request_path.buffer)) {
+            printf("> valid path [%s]\n", response_path);
+            content = read_file_contents(response_path);
+            response = generate_response(OK, NULL, &content);
+        }
+        else {
+            printf("> invalid path [%s]\n", response_path);
+            response = generate_response(NOT_FOUND, NULL, NULL);
+        }
+
+        printf("Response: \n%s\n", response.buffer);
         
         // Send the response to the client
         if (write(new_socket, response.buffer, response.length) < 0) {
@@ -77,7 +102,8 @@ int main() {
         }
         
         // Clean up
-        free(path.buffer);
+        free(request_path.buffer);
+        memset(response_path, 0, PATH_MAX);
 
         memset(buffer, 0, MAX_REQUEST_SIZE);
         close(new_socket);
